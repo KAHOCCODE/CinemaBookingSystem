@@ -1,22 +1,16 @@
-# Build and deploy CinemaBookingSystem to Azure App Service
-
-name: Build and deploy CinemaBookingSystem to Azure
+name: Build CinemaBookingSystem
 
 on:
   push:
     branches:
       - master
-
+  pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 permissions:
   contents: read
-
-env:
-  DOTNET_VERSION: '8.0.x'
-  SOLUTION_PATH: 'CinemaBookingSystem.sln'
-  PROJECT_PATH: 'CinemaBookingSystem/CinemaBookingSystem.csproj'
-  PUBLISH_PATH: './publish'
 
 jobs:
   build:
@@ -25,58 +19,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore "${{ env.SOLUTION_PATH }}"
+        run: dotnet restore CinemaBookingSystem.sln
 
       - name: Build application
-        run: >
-          dotnet build "${{ env.SOLUTION_PATH }}"
-          --configuration Release
-          --no-restore
-
-      - name: Publish application
-        run: >
-          dotnet publish "${{ env.PROJECT_PATH }}"
-          --configuration Release
-          --output "${{ env.PUBLISH_PATH }}"
-          --no-restore
-
-      - name: Upload deployment artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: cinema-booking-app
-          path: ${{ env.PUBLISH_PATH }}
-          if-no-files-found: error
-          retention-days: 1
-
-  deploy:
-    name: Deploy to Azure
-    runs-on: windows-latest
-    needs: build
-
-    environment:
-      name: Production
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
-    steps:
-      - name: Download deployment artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: cinema-booking-app
-          path: ./publish
-
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: '3k1d'
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7491F21FFA774220972A2551499CB766 }}
-          package: ./publish
+        run: dotnet build CinemaBookingSystem.sln --configuration Release --no-restore
